@@ -3,6 +3,7 @@ package uoc.ds.pr.model;
 import java.time.LocalDate;
 
 public class Player {
+    public static int idNumber = 0;
     private String id;
     private String name;
     private String surname;
@@ -14,6 +15,7 @@ public class Player {
         this.name = name;
         this.surname = surname;
         this.dateOfBirth = dateOfBirth;
+        idNumber++;
     }
 
     public String getName() {

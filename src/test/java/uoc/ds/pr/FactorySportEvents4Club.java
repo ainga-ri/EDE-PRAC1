@@ -4,10 +4,7 @@ import static uoc.ds.pr.SportEvents4Club.MAX_NUM_ORGANIZING_ENTITIES;
 import static uoc.ds.pr.util.DateUtils.createLocalDate;
 
 import org.junit.Assert;
-import uoc.ds.pr.exceptions.NoRatingsException;
-import uoc.ds.pr.exceptions.NoSportEventsException;
-import uoc.ds.pr.exceptions.OrganizingEntityNotFoundException;
-import uoc.ds.pr.exceptions.PlayerNotFoundException;
+import uoc.ds.pr.exceptions.*;
 import uoc.ds.pr.model.File;
 import uoc.ds.pr.util.ResourceUtil;
 

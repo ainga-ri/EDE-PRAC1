@@ -12,10 +12,11 @@ import uoc.ds.pr.model.SportEvent;
 import java.time.LocalDate;
 
 public class SportEvents4ClubImpl implements SportEvents4Club {
-    List<Player> players = new LinkedList<>();
+    Player[] players = new Player[12];
     @Override
     public void addPlayer(String id, String name, String surname, LocalDate dateOfBirth) {
         Player player = new Player(id, name, surname, dateOfBirth);
+        players[Player.idNumber - 1] = player;
     }
 
     @Override
@@ -51,6 +52,7 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public Iterator<SportEvent> getAllEvents() throws NoSportEventsException {
+
         return null;
     }
 
@@ -71,7 +73,11 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public Player mostActivePlayer() throws PlayerNotFoundException {
-        return players.
+        if (players[0] != null)
+            // some logic
+            return players[0];
+        else
+            throw new PlayerNotFoundException();
     }
 
     @Override
