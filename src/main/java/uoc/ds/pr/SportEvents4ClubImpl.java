@@ -1,18 +1,23 @@
 package uoc.ds.pr;
 
 import edu.uoc.ds.adt.sequential.LinkedList;
-import edu.uoc.ds.adt.sequential.List;
+import edu.uoc.ds.adt.sequential.QueueArrayImpl;
 import edu.uoc.ds.traversal.Iterator;
 import uoc.ds.pr.exceptions.*;
 import uoc.ds.pr.model.File;
 import uoc.ds.pr.model.OrganizingEntity;
 import uoc.ds.pr.model.Player;
 import uoc.ds.pr.model.SportEvent;
+import uoc.ds.pr.util.DictionaryOrderedVector;
 
 import java.time.LocalDate;
 
 public class SportEvents4ClubImpl implements SportEvents4Club {
     Player[] players = new Player[12];
+    OrganizingEntity[] org = new OrganizingEntity[5];
+    QueueArrayImpl<File> files = new QueueArrayImpl<>();
+    DictionaryOrderedVector dictionaryOrderedVector = new DictionaryOrderedVector(11);
+    LinkedList<Rating> ratingLinkedList = new LinkedList<>();
     @Override
     public void addPlayer(String id, String name, String surname, LocalDate dateOfBirth) {
         Player player = new Player(id, name, surname, dateOfBirth);
@@ -21,18 +26,26 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public void addOrganizingEntity(int id, String name, String description) {
-
+        OrganizingEntity newOrg = new OrganizingEntity(id, name, description);
+        org[OrganizingEntity.totalId - 1] = newOrg;
     }
 
     @Override
     public void addFile(String id, String eventId, int orgId, String description, Type type, byte resources, int max, LocalDate startDate, LocalDate endDate) throws OrganizingEntityNotFoundException {
-        File file = new File();
-
+        File file = new File( id,  eventId,  orgId,  description,  type,  resources,  max,  startDate, endDate);
+        files.add(file);
     }
 
     @Override
     public File updateFile(Status status, LocalDate date, String description) throws NoFilesException {
-        return null;
+        if (files.size() == 0)
+            throw new NoFilesException();
+        File file = files.poll();
+        file.setStatus(status);
+        file.setEndDate(date);
+        file.setDescription(description);
+        files.add(file);
+        return file;
     }
 
     @Override
@@ -47,12 +60,15 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public Iterator<SportEvent> getSportEventsByOrganizingEntity(int organizationId) throws NoSportEventsException {
+        if (dictionaryOrderedVector.isEmpty())
+            throw new NoSportEventsException();
         return null;
     }
 
     @Override
     public Iterator<SportEvent> getAllEvents() throws NoSportEventsException {
-
+        if (dictionaryOrderedVector.isEmpty())
+            throw new NoSportEventsException();
         return null;
     }
 
@@ -68,6 +84,8 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public Iterator<uoc.ds.pr.model.Rating> getRatingsByEvent(String eventId) throws SportEventNotFoundException, NoRatingsException {
+        if (ratingLinkedList.isEmpty())
+            throw new NoRatingsException();
         return null;
     }
 
@@ -87,17 +105,17 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public int numPlayers() {
-        return 0;
+        return Player.idNumber;
     }
 
     @Override
     public int numOrganizingEntities() {
-        return 0;
+        return OrganizingEntity.totalId;
     }
 
     @Override
     public int numFiles() {
-        return 0;
+        return File.numFiles;
     }
 
     @Override
@@ -107,7 +125,13 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public int numPendingFiles() {
-        return 0;
+        int totalPendingFiles = 0;
+        Iterator<File> fileIterator = files.values();
+        while (fileIterator.hasNext()) {
+            if (fileIterator.next().getStatus() == Status.PENDING)
+                totalPendingFiles++;
+        }
+        return totalPendingFiles;
     }
 
     @Override

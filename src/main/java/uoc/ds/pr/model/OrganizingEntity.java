@@ -1,12 +1,17 @@
 package uoc.ds.pr.model;
 
 public class OrganizingEntity {
+    public static int totalId = 0;
+
+    private int id;
     private String name;
     private String description;
 
-    public OrganizingEntity(String name, String description) {
+    public OrganizingEntity(int id, String name, String description) {
+        this.id = id;
         this.name = name;
         this.description = description;
+        totalId++;
     }
 
     public String getName() {
