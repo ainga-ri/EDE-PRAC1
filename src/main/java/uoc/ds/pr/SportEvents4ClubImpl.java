@@ -13,13 +13,14 @@ import uoc.ds.pr.util.DictionaryOrderedVector;
 import java.time.LocalDate;
 
 public class SportEvents4ClubImpl implements SportEvents4Club {
-    Player[] players = new Player[12];
+    Player[] players = new Player[15];
     OrganizingEntity[] org = new OrganizingEntity[5];
     QueueArrayImpl<File> files = new QueueArrayImpl<>();
-    DictionaryOrderedVector dictionaryOrderedVector = new DictionaryOrderedVector(11);
+    DictionaryOrderedVector<String, String> eventsDictionaryOrderedVector = new DictionaryOrderedVector<>(11);
     LinkedList<Rating> ratingLinkedList = new LinkedList<>();
     @Override
     public void addPlayer(String id, String name, String surname, LocalDate dateOfBirth) {
+
         Player player = new Player(id, name, surname, dateOfBirth);
         players[Player.idNumber - 1] = player;
     }
@@ -50,7 +51,16 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public void signUpEvent(String playerId, String eventId) throws PlayerNotFoundException, SportEventNotFoundException, LimitExceededException {
-
+        int player = 0;
+        boolean found = false;
+        while (player < players.length && !found) {
+            if (players[player].getId().equals(playerId))
+                found = true;
+            player++;
+        }
+        if (!found)
+            throw new PlayerNotFoundException();
+        eventsDictionaryOrderedVector.put(playerId, eventId);
     }
 
     @Override
@@ -60,14 +70,14 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public Iterator<SportEvent> getSportEventsByOrganizingEntity(int organizationId) throws NoSportEventsException {
-        if (dictionaryOrderedVector.isEmpty())
+        if (eventsDictionaryOrderedVector.isEmpty())
             throw new NoSportEventsException();
         return null;
     }
 
     @Override
     public Iterator<SportEvent> getAllEvents() throws NoSportEventsException {
-        if (dictionaryOrderedVector.isEmpty())
+        if (eventsDictionaryOrderedVector.isEmpty())
             throw new NoSportEventsException();
         return null;
     }
@@ -141,12 +151,24 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public int numSportEventsByPlayer(String playerId) {
-        return 0;
+        int totalEvents = 0;
+        Iterator<String> eventIterator = eventsDictionaryOrderedVector.keys();
+        while (eventIterator.hasNext()) {
+            if (eventIterator.next().equals(playerId))
+                totalEvents++;
+        }
+        return totalEvents;
     }
 
     @Override
     public int numPlayersBySportEvent(String sportEventId) {
-        return 0;
+        int totalPlayers = 0;
+        Iterator<String> eventIterator = eventsDictionaryOrderedVector.values();
+        while (eventIterator.hasNext()) {
+            if (eventIterator.next().equals(sportEventId))
+                totalPlayers++;
+        }
+        return totalPlayers;
     }
 
     @Override
@@ -161,7 +183,17 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public Player getPlayer(String playerId) {
-        return null;
+        if (players.length > 0) {
+            int i = 0;
+            boolean found = false;
+            while (i < players.length && !found) {
+                if (players[i].getId().equals(playerId))
+                    found = true;
+                i++;
+            }
+            return (players[i - 1]);
+        } else
+            return null;
     }
 
     @Override
