@@ -1,23 +1,27 @@
 package uoc.ds.pr.model;
 
-public class OrganizingEntity {
-    public static int totalId = 0;
+import edu.uoc.ds.adt.sequential.LinkedList;
+import edu.uoc.ds.traversal.Iterator;
 
+public class OrganizingEntity {
     private int id;
     private String name;
     private String description;
+
+    private LinkedList<String> sportEvent = new LinkedList<>();
 
     public OrganizingEntity(int id, String name, String description) {
         this.id = id;
         this.name = name;
         this.description = description;
-        totalId++;
     }
 
     public String getName() {
         return name;
     }
-
+    public int getId() {
+        return id;
+    }
     public void setName(String name) {
         this.name = name;
     }
@@ -28,5 +32,9 @@ public class OrganizingEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public void addSportEvent(String sportEvent) {
+        this.sportEvent.insertEnd(sportEvent);
     }
 }

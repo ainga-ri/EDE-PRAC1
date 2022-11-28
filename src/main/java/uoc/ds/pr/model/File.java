@@ -6,7 +6,6 @@ import uoc.ds.pr.SportEvents4ClubImpl;
 import java.time.LocalDate;
 
 public class File {
-    public static int numFiles = 0;
     String id;
     String eventId;
     int orgId;
@@ -29,7 +28,6 @@ public class File {
         this.max = max;
         this.startDate = startDate;
         this.endDate = endDate;
-        numFiles++;
     }
 
     public String getFileId() {

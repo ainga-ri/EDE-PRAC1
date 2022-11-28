@@ -1,5 +1,6 @@
 package uoc.ds.pr;
 
+import edu.uoc.ds.adt.nonlinear.Dictionary;
 import edu.uoc.ds.adt.sequential.LinkedList;
 import edu.uoc.ds.adt.sequential.QueueArrayImpl;
 import edu.uoc.ds.traversal.Iterator;
@@ -13,28 +14,67 @@ import uoc.ds.pr.util.DictionaryOrderedVector;
 import java.time.LocalDate;
 
 public class SportEvents4ClubImpl implements SportEvents4Club {
-    Player[] players = new Player[15];
-    OrganizingEntity[] org = new OrganizingEntity[5];
-    QueueArrayImpl<File> files = new QueueArrayImpl<>();
-    DictionaryOrderedVector<String, String> eventsDictionaryOrderedVector = new DictionaryOrderedVector<>(11);
-    LinkedList<Rating> ratingLinkedList = new LinkedList<>();
+    private Player[] players = new Player[15];
+    int totalPlayers = 0;
+    private OrganizingEntity[] org = new OrganizingEntity[8];
+    int totalOrgEntity = 0;
+    private QueueArrayImpl<File> files = new QueueArrayImpl<>();
+    int totalNumFiles = 0;
+    private Dictionary sportsEvent = new DictionaryOrderedVector<Integer, String>(11);
+    private LinkedList<Rating> ratingLinkedList = new LinkedList<>();
     @Override
     public void addPlayer(String id, String name, String surname, LocalDate dateOfBirth) {
-
-        Player player = new Player(id, name, surname, dateOfBirth);
-        players[Player.idNumber - 1] = player;
+        int i = 0;
+        boolean found = false;
+        while (i < totalPlayers && !found) {
+            if (players[i].getId().equals(id)) {
+                players[i] = new Player(id, name, surname, dateOfBirth);
+                found = true; // I think it is not the right way
+            }
+            i++;
+        }
+        if (!found) {
+            Player player = new Player(id, name, surname, dateOfBirth);
+            players[totalPlayers] = player;
+            totalPlayers++;
+        }
     }
 
     @Override
     public void addOrganizingEntity(int id, String name, String description) {
-        OrganizingEntity newOrg = new OrganizingEntity(id, name, description);
-        org[OrganizingEntity.totalId - 1] = newOrg;
+        int i = 0;
+        boolean found = false;
+        while (i < totalOrgEntity && !found) {
+            if (org[i].getId() == (id)) {
+                org[i] = new OrganizingEntity(id, name, description);
+                found = true; // I think it is not the right way
+            }
+            i++;
+        }
+        if (!found) {
+            OrganizingEntity newOrg = new OrganizingEntity(id, name, description);
+            org[totalOrgEntity] = newOrg;
+            totalOrgEntity++;
+        }
     }
 
     @Override
     public void addFile(String id, String eventId, int orgId, String description, Type type, byte resources, int max, LocalDate startDate, LocalDate endDate) throws OrganizingEntityNotFoundException {
-        File file = new File( id,  eventId,  orgId,  description,  type,  resources,  max,  startDate, endDate);
-        files.add(file);
+        int i = 0;
+        boolean found = false;
+        while (i < totalOrgEntity && !found) {
+            if (org[i].getId() == orgId) {
+                org[i].addSportEvent(eventId);
+                found = true;
+            }
+            i++;
+        }
+        if (found) {
+            File file = new File(id, eventId, orgId, description, type, resources, max, startDate, endDate);
+            files.add(file);
+            totalNumFiles++;
+        } else
+            throw new OrganizingEntityNotFoundException();
     }
 
     @Override
@@ -60,7 +100,7 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
         }
         if (!found)
             throw new PlayerNotFoundException();
-        eventsDictionaryOrderedVector.put(playerId, eventId);
+        sportsEvent.put(playerId, eventId);
     }
 
     @Override
@@ -70,14 +110,14 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public Iterator<SportEvent> getSportEventsByOrganizingEntity(int organizationId) throws NoSportEventsException {
-        if (eventsDictionaryOrderedVector.isEmpty())
+        if (sportsEvent.isEmpty())
             throw new NoSportEventsException();
         return null;
     }
 
     @Override
     public Iterator<SportEvent> getAllEvents() throws NoSportEventsException {
-        if (eventsDictionaryOrderedVector.isEmpty())
+        if (sportsEvent.isEmpty())
             throw new NoSportEventsException();
         return null;
     }
@@ -115,22 +155,28 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public int numPlayers() {
-        return Player.idNumber;
+        return totalPlayers;
     }
 
     @Override
     public int numOrganizingEntities() {
-        return OrganizingEntity.totalId;
+        return totalOrgEntity;
     }
 
     @Override
     public int numFiles() {
-        return File.numFiles;
+        return totalNumFiles;
     }
 
     @Override
     public int numRejectedFiles() {
-        return 0;
+        int totalPendingFiles = 0;
+        Iterator<File> fileIterator = files.values();
+        while (fileIterator.hasNext()) {
+            if (fileIterator.next().getStatus() == Status.DISABLED)
+                totalPendingFiles++;
+        }
+        return totalPendingFiles;
     }
 
     @Override
@@ -146,13 +192,14 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public int numSportEvents() {
+
         return 0;
     }
 
     @Override
     public int numSportEventsByPlayer(String playerId) {
         int totalEvents = 0;
-        Iterator<String> eventIterator = eventsDictionaryOrderedVector.keys();
+        Iterator<String> eventIterator = sportsEvent.keys();
         while (eventIterator.hasNext()) {
             if (eventIterator.next().equals(playerId))
                 totalEvents++;
@@ -163,7 +210,7 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
     @Override
     public int numPlayersBySportEvent(String sportEventId) {
         int totalPlayers = 0;
-        Iterator<String> eventIterator = eventsDictionaryOrderedVector.values();
+        Iterator<String> eventIterator = sportsEvent.values();
         while (eventIterator.hasNext()) {
             if (eventIterator.next().equals(sportEventId))
                 totalPlayers++;
@@ -203,11 +250,18 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public OrganizingEntity getOrganizingEntity(int id) {
+        int i = 0;
+        while (i < totalOrgEntity) {
+            if (org[i].getId() == (id)) {
+                return org[i];
+            }
+            i++;
+        }
         return null;
     }
 
     @Override
     public File currentFile() {
-        return null;
+        return files.peek();
     }
 }
