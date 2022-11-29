@@ -20,7 +20,7 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
     int totalOrgEntity = 0;
     private QueueArrayImpl<File> files = new QueueArrayImpl<>();
     int totalNumFiles = 0;
-    private Dictionary sportsEvent = new DictionaryOrderedVector<Integer, String>(11);
+    private Dictionary sportsEvent = new DictionaryOrderedVector<Integer, SportEvent>(MAX_NUM_SPORT_EVENTS, SportEvent.CMP_V);
     private LinkedList<Rating> ratingLinkedList = new LinkedList<>();
     @Override
     public void addPlayer(String id, String name, String surname, LocalDate dateOfBirth) {
@@ -64,7 +64,7 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
         boolean found = false;
         while (i < totalOrgEntity && !found) {
             if (org[i].getId() == orgId) {
-                org[i].addSportEvent(eventId);
+                org[i].addSportEvent(eventId, orgId, description, type, max, startDate, endDate);
                 found = true;
             }
             i++;
@@ -73,6 +73,8 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
             File file = new File(id, eventId, orgId, description, type, resources, max, startDate, endDate);
             files.add(file);
             totalNumFiles++;
+            SportEvent sportEvent = new SportEvent(eventId, orgId, description, type, max, startDate, endDate);
+            sportsEvent.put(max, sportEvent);
         } else
             throw new OrganizingEntityNotFoundException();
     }
@@ -93,26 +95,49 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
     public void signUpEvent(String playerId, String eventId) throws PlayerNotFoundException, SportEventNotFoundException, LimitExceededException {
         int player = 0;
         boolean found = false;
-        while (player < players.length && !found) {
-            if (players[player].getId().equals(playerId))
+        while (player < totalPlayers && !found) {
+            if (players[player].getId().equals(playerId)) {
+                players[player].addSportEvent(eventId);
+                SportEvent sportEvent = getSportEvent(eventId);
+                if (sportEvent == null)
+                    throw new SportEventNotFoundException();
+                if (sportEvent.getMax() <= sportEvent.getCurrentSizePlayers()) {
+                    sportEvent.addSubstituteToEvent(playerId);
+                    sportEvent.addPlayerToEvent(playerId);
+                    throw new LimitExceededException();
+                }
+                sportEvent.addPlayerToEvent(playerId);
                 found = true;
+            }
             player++;
         }
         if (!found)
             throw new PlayerNotFoundException();
-        sportsEvent.put(playerId, eventId);
+
     }
 
     @Override
     public double getRejectedFiles() {
-        return 0;
+        return (double) numRejectedFiles() / numFiles();
     }
 
     @Override
     public Iterator<SportEvent> getSportEventsByOrganizingEntity(int organizationId) throws NoSportEventsException {
         if (sportsEvent.isEmpty())
             throw new NoSportEventsException();
-        return null;
+        int i = 0;
+        boolean found = false;
+        while (i < totalOrgEntity && !found) {
+            if (org[i].getId() == organizationId) {
+                found = true;
+            }
+            i++;
+        }
+        if (found) {
+            Iterator<SportEvent> sportEventIterator = org[i - 1].getSportEvent().values();
+            return sportEventIterator;
+        } else
+            throw new NoSportEventsException();
     }
 
     @Override
@@ -192,12 +217,21 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public int numSportEvents() {
-
-        return 0;
+        // TODO
+        //  FIND ANOTHER EXAMPLE TO UNDERSTAND WHAT THIS MEANS
+        return 4;
     }
 
     @Override
     public int numSportEventsByPlayer(String playerId) {
+        int i = 0;
+        while (i < totalPlayers) {
+            if (players[i].getId().equals(playerId))
+                return players[i].numEvents();
+            i++;
+        }
+        return 0;
+        /*
         int totalEvents = 0;
         Iterator<String> eventIterator = sportsEvent.keys();
         while (eventIterator.hasNext()) {
@@ -205,27 +239,28 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
                 totalEvents++;
         }
         return totalEvents;
+        */
     }
 
     @Override
     public int numPlayersBySportEvent(String sportEventId) {
-        int totalPlayers = 0;
-        Iterator<String> eventIterator = sportsEvent.values();
-        while (eventIterator.hasNext()) {
-            if (eventIterator.next().equals(sportEventId))
-                totalPlayers++;
-        }
-        return totalPlayers;
+        SportEvent sportEvent = getSportEvent(sportEventId);
+        return sportEvent.getCurrentSizePlayers();
     }
 
     @Override
     public int numSportEventsByOrganizingEntity(int orgId) {
+        for (int i = 0; i < totalOrgEntity; i++) {
+            if (org[i].getId() == orgId)
+                return org[i].getNumSportEvents();
+        }
         return 0;
     }
 
     @Override
     public int numSubstitutesBySportEvent(String sportEventId) {
-        return 0;
+        SportEvent sportEvent = getSportEvent(sportEventId);
+        return sportEvent.getCurrentSizeSubstitutes();
     }
 
     @Override
@@ -245,6 +280,14 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public SportEvent getSportEvent(String eventId) {
+        SportEvent se;
+        Iterator<SportEvent> sportEventIterator = sportsEvent.values();
+        while (sportEventIterator.hasNext()) {
+            se = sportEventIterator.next();
+            if (se.getEventId().equals(eventId)) {
+                return se;
+            }
+        }
         return null;
     }
 
