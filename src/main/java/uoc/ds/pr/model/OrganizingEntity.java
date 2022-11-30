@@ -44,9 +44,7 @@ public class OrganizingEntity {
     public int getNumSportEvents() {
         return sportEvent.size();
     }
-
     public LinkedList<SportEvent> getSportEvent() {
         return sportEvent;
     }
-
 }

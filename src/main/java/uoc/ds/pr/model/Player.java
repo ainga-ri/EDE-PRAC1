@@ -11,7 +11,7 @@ public class Player {
 
     private LocalDate dateOfBirth;
 
-    private LinkedList<String> sportEvent = new LinkedList<>();
+    private LinkedList<SportEvent> sportEvent = new LinkedList<>();
 
     public Player(String id, String name, String surname, LocalDate dateOfBirth) {
         this.id = id;
@@ -43,7 +43,10 @@ public class Player {
     public int numEvents() {
         return sportEvent.size();
     }
-    public void addSportEvent(String sportEvent) {
+    public void addSportEvent(SportEvent sportEvent) {
         this.sportEvent.insertEnd(sportEvent);
+    }
+    public LinkedList<SportEvent> getSportEvent() {
+        return sportEvent;
     }
 }

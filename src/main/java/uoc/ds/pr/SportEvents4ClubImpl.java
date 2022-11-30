@@ -5,10 +5,7 @@ import edu.uoc.ds.adt.sequential.LinkedList;
 import edu.uoc.ds.adt.sequential.QueueArrayImpl;
 import edu.uoc.ds.traversal.Iterator;
 import uoc.ds.pr.exceptions.*;
-import uoc.ds.pr.model.File;
-import uoc.ds.pr.model.OrganizingEntity;
-import uoc.ds.pr.model.Player;
-import uoc.ds.pr.model.SportEvent;
+import uoc.ds.pr.model.*;
 import uoc.ds.pr.util.DictionaryOrderedVector;
 
 import java.time.LocalDate;
@@ -97,7 +94,7 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
         boolean found = false;
         while (player < totalPlayers && !found) {
             if (players[player].getId().equals(playerId)) {
-                players[player].addSportEvent(eventId);
+                players[player].addSportEvent(getSportEvent(eventId));
                 SportEvent sportEvent = getSportEvent(eventId);
                 if (sportEvent == null)
                     throw new SportEventNotFoundException();
@@ -106,6 +103,7 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
                     sportEvent.addPlayerToEvent(playerId);
                     throw new LimitExceededException();
                 }
+
                 sportEvent.addPlayerToEvent(playerId);
                 found = true;
             }
@@ -144,17 +142,46 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
     public Iterator<SportEvent> getAllEvents() throws NoSportEventsException {
         if (sportsEvent.isEmpty())
             throw new NoSportEventsException();
-        return null;
+        Iterator<SportEvent> it= sportsEvent.values();
+        Dictionary activeSportEvents = new DictionaryOrderedVector<Integer, SportEvent>(MAX_NUM_SPORT_EVENTS, SportEvent.CMP_V);
+        while (it.hasNext()) {
+            SportEvent se = it.next();
+            if (numPlayersBySportEvent(se.getEventId()) > 0) {
+                activeSportEvents.put(se.getMax(), se);
+            }
+        }
+        return activeSportEvents.values();
     }
 
     @Override
     public Iterator<SportEvent> getEventsByPlayer(String playerId) throws NoSportEventsException {
+        int i = 0;
+        while (i < totalPlayers) {
+            if (players[i].getId().equals(playerId)) {
+                if (players[i].getSportEvent().size() > 0)
+                    return players[i].getSportEvent().values();
+                else
+                    throw new NoSportEventsException();
+            }
+            i++;
+        }
         return null;
     }
 
     @Override
     public void addRating(String playerId, String eventId, Rating rating, String message) throws SportEventNotFoundException, PlayerNotFoundException, PlayerNotInSportEventException {
-
+        if (getSportEvent(eventId) == null)
+            throw new SportEventNotFoundException();
+        if (getPlayer(eventId) == null)
+            throw new PlayerNotFoundException();
+        try {
+             getEventsByPlayer(playerId);
+        } catch (NoSportEventsException e) {
+            throw new PlayerNotInSportEventException();
+        }
+        uoc.ds.pr.model.Rating rate = new uoc.ds.pr.model.Rating(playerId, eventId, rating, message);
+        SportEvent eve = getSportEvent(eventId);
+        eve.addRating(rate);
     }
 
     @Override
@@ -166,9 +193,14 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public Player mostActivePlayer() throws PlayerNotFoundException {
-        if (players[0] != null)
-            // some logic
-            return players[0];
+        if (players[0] != null) {
+            Player mostActivePlayer = players[0];
+            for (int i = 0; i < totalPlayers; i++) {
+                if (players[i].getSportEvent().size() > mostActivePlayer.getSportEvent().size())
+                    mostActivePlayer = players[i];
+            }
+            return mostActivePlayer;
+        }
         else
             throw new PlayerNotFoundException();
     }

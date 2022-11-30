@@ -5,6 +5,7 @@ import uoc.ds.pr.SportEvents4Club;
 
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.Iterator;
 
 public class SportEvent implements Comparable<SportEvent> {
 
@@ -19,6 +20,7 @@ public class SportEvent implements Comparable<SportEvent> {
 
     private LinkedList<String> players = new LinkedList<>();
     private LinkedList<String> substitutes = new LinkedList<>();
+    private LinkedList<Rating> ratingLinkedList = new LinkedList<>();
 
     public SportEvent(String eventId, int orgId, String description, SportEvents4Club.Type type, int max, LocalDate startDate, LocalDate endDate) {
         this.eventId = eventId;
@@ -38,7 +40,11 @@ public class SportEvent implements Comparable<SportEvent> {
     }
 
     public double rating() {
-        return 0;
+        double totalRating = 0;
+        while (ratingLinkedList.values().hasNext()) {
+            totalRating += ratingLinkedList.values().next().rating();
+        }
+        return totalRating / ratingLinkedList.size();
     }
 
     @Override
@@ -50,6 +56,9 @@ public class SportEvent implements Comparable<SportEvent> {
     }
     public void addSubstituteToEvent(String playerId) {
         this.substitutes.insertEnd(playerId);
+    }
+    public void addRating(Rating rate) {
+        this.ratingLinkedList.insertEnd(rate);
     }
     public int getCurrentSizePlayers() {
         return players.size();
