@@ -1,11 +1,11 @@
 package uoc.ds.pr.model;
 
 import edu.uoc.ds.adt.sequential.LinkedList;
+import edu.uoc.ds.traversal.Iterator;
 import uoc.ds.pr.SportEvents4Club;
 
 import java.time.LocalDate;
 import java.util.Comparator;
-import java.util.Iterator;
 
 public class SportEvent implements Comparable<SportEvent> {
 
@@ -41,10 +41,17 @@ public class SportEvent implements Comparable<SportEvent> {
 
     public double rating() {
         double totalRating = 0;
-        while (ratingLinkedList.values().hasNext()) {
-            totalRating += ratingLinkedList.values().next().rating();
-        }
-        return totalRating / ratingLinkedList.size();
+        int i = 0;
+
+        if (ratingLinkedList.size() > 0) {
+            Iterator<Rating > ra = getRatingLinkedList().values();
+            while (ra.hasNext()) {
+                totalRating = totalRating + ra.next().rating().getValue();
+                i++;
+            }
+            return totalRating / ratingLinkedList.size();
+        } else
+            return 0;
     }
 
     @Override
@@ -57,13 +64,21 @@ public class SportEvent implements Comparable<SportEvent> {
     public void addSubstituteToEvent(String playerId) {
         this.substitutes.insertEnd(playerId);
     }
+
     public void addRating(Rating rate) {
+
         this.ratingLinkedList.insertEnd(rate);
     }
+
     public int getCurrentSizePlayers() {
         return players.size();
     }
     public int getCurrentSizeSubstitutes() {
         return substitutes.size();
     }
+
+    public LinkedList<Rating> getRatingLinkedList() {
+        return ratingLinkedList;
+    }
+
 }

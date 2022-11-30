@@ -18,7 +18,7 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
     private QueueArrayImpl<File> files = new QueueArrayImpl<>();
     int totalNumFiles = 0;
     private Dictionary sportsEvent = new DictionaryOrderedVector<Integer, SportEvent>(MAX_NUM_SPORT_EVENTS, SportEvent.CMP_V);
-    private LinkedList<Rating> ratingLinkedList = new LinkedList<>();
+    //private LinkedList<Rating> ratingLinkedList = new LinkedList<>();
     @Override
     public void addPlayer(String id, String name, String surname, LocalDate dateOfBirth) {
         int i = 0;
@@ -172,23 +172,23 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
     public void addRating(String playerId, String eventId, Rating rating, String message) throws SportEventNotFoundException, PlayerNotFoundException, PlayerNotInSportEventException {
         if (getSportEvent(eventId) == null)
             throw new SportEventNotFoundException();
-        if (getPlayer(eventId) == null)
+        if (getPlayer(playerId) == null)
             throw new PlayerNotFoundException();
         try {
              getEventsByPlayer(playerId);
         } catch (NoSportEventsException e) {
             throw new PlayerNotInSportEventException();
         }
-        uoc.ds.pr.model.Rating rate = new uoc.ds.pr.model.Rating(playerId, eventId, rating, message);
+        uoc.ds.pr.model.Rating rate = new uoc.ds.pr.model.Rating(getPlayer(playerId), eventId, rating, message);
         SportEvent eve = getSportEvent(eventId);
         eve.addRating(rate);
     }
 
     @Override
     public Iterator<uoc.ds.pr.model.Rating> getRatingsByEvent(String eventId) throws SportEventNotFoundException, NoRatingsException {
-        if (ratingLinkedList.isEmpty())
+        if (getSportEvent(eventId).getRatingLinkedList().isEmpty())
             throw new NoRatingsException();
-        return null;
+        return getSportEvent(eventId).getRatingLinkedList().values();
     }
 
     @Override
@@ -207,7 +207,20 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
 
     @Override
     public SportEvent bestSportEvent() throws SportEventNotFoundException {
-        return null;
+        if (sportsEvent.isEmpty())
+            throw new SportEventNotFoundException();
+        Iterator<SportEvent> es =  sportsEvent.values();
+        SportEvent bestEvent = es.next();
+        double bestSportEventRating = bestEvent.rating();
+        while (es.hasNext()) {
+            SportEvent possBestEvent = es.next();
+            double nextRating = possBestEvent.rating();
+            if (bestSportEventRating < nextRating) {
+                bestEvent = possBestEvent;
+                bestSportEventRating = nextRating;
+            }
+        }
+        return bestEvent;
     }
 
     @Override
@@ -263,15 +276,6 @@ public class SportEvents4ClubImpl implements SportEvents4Club {
             i++;
         }
         return 0;
-        /*
-        int totalEvents = 0;
-        Iterator<String> eventIterator = sportsEvent.keys();
-        while (eventIterator.hasNext()) {
-            if (eventIterator.next().equals(playerId))
-                totalEvents++;
-        }
-        return totalEvents;
-        */
     }
 
     @Override
